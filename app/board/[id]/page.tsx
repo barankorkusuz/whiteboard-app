@@ -20,7 +20,7 @@ const App = () => {
   const boardId = params.id as string;
 
   useEffect(() => {
-      fetch(`api/boards/${boardId}`)
+      fetch(`/api/boards/${boardId}`)
       .then((res) => res.json())
       .then((board) => {
         if (board.content){
@@ -31,15 +31,11 @@ const App = () => {
 
   const handleSave = async () => {
 
-    const res = await fetch("/api/boards", {
+    await fetch("/api/boards", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify({id: boardId, title: "My Board", content: lines}),
     });
-
-    const board = await res.json();
-    setBoardId(board.id);
-    localStorage.setItem("boardId", board.id);
   }
 
   const handleMouseDown = (e) => {
