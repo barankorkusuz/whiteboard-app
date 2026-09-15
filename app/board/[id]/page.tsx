@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect } from "react";
 import {Stage, Layer, Line } from "react-konva";
+import { useParams } from "next/navigation";
 
 type LineData = {
     points: typeof Line[];
@@ -15,21 +16,18 @@ const App = () => {
   const [strokeWidth, setStrokeWidth] = React.useState<number>(5);
   const isDrawing = React.useRef(false);
 
-  const [boardId, setBoardId] = React.useState<string | null>(null);
+  const params = useParams();
+  const boardId = params.id as string;
 
   useEffect(() => {
-    const savedId = localStorage.getItem("boardId");
-    if(savedId){
-      fetch(`api/boards/${savedId}`)
+      fetch(`api/boards/${boardId}`)
       .then((res) => res.json())
       .then((board) => {
         if (board.content){
           setLines(board.content);
-          setBoardId(board.id);
         }
       })
-    }
-  }, []);
+  }, [boardId]);
 
   const handleSave = async () => {
 
