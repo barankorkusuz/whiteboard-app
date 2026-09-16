@@ -1,25 +1,20 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { createBoard } from "@/lib/api"
 
 const Home = () => {
 
   const router = useRouter();
 
-  const createBoard = async () => {
-    const res = await fetch("/api/boards",{
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({title: "Untitled Board", content: []}),
-    } );
-    const board = await res.json();
-
+  const handleCreateBoard = async () => {
+    const board = await createBoard();
     router.push(`/board/${board.id}`);
-  };
+  }
 
   return (
     <div>
-      <button onClick={createBoard}> Create new board</button>
+      <button onClick={handleCreateBoard}> Create new board</button>
     </div>
   );
 };
