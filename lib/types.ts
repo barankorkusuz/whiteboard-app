@@ -10,4 +10,6 @@ export type CursorData = {
     y: number;
     name: string;
     color: string;
+    strokeWidth: number;
+    tool: "pen" | "eraser";
 };

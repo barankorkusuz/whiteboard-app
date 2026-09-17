@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, useCallback } from "react"
 import * as Y from "yjs"
 import { WebsocketProvider } from "y-websocket"
 import { LineData, CursorData } from "./types"
@@ -15,10 +15,10 @@ export function useWhiteboardSync(boardId: string){
     const ylinesRef = useRef<Y.Array<LineData> | null>(null);
     const providerRef = useRef<WebsocketProvider | null>(null);
 
-    const userColor = useRef(`hsl(${Math.floor(Math.random() * 360)}, 70% 50%)`);
-    const userName = useRef(`User-${Math.floor(Math.random() * 1000)}`);
+    
 
     useEffect(() => {
+        const userName = `User-${Math.floor(Math.random() * 1000)}`;
         const ydoc = new Y.Doc();
         const provider = new WebsocketProvider(WEBSOCKET_URL, boardId, ydoc);
         const ylines = ydoc.getArray<LineData>("lines");
@@ -27,8 +27,7 @@ export function useWhiteboardSync(boardId: string){
         providerRef.current = provider;
 
         provider.awareness.setLocalStateField("user", {
-            name: userName.current,
-            color: userColor.current,
+            name: userName,
         });
 
         const updateLines = () => setLines(ylines.toArray());
@@ -43,13 +42,12 @@ export function useWhiteboardSync(boardId: string){
             states.forEach((state, clientId) => {
                 if (clientId === provider.awareness.clientID) return;
                 if (state.cursor && state.user){
-                    cursors[clientId] = {x: state.cursor.x, y: state.cursor.y, name: state.user.name, color: state.user.color};
+                    cursors[clientId] = {x: state.cursor.x, y: state.cursor.y, name: state.user.name, color: state.drawSettings.color || "#000000", strokeWidth: state.drawSettings.strokeWidth || 5, tool: state.drawSettings.tool || "pen" };
                 }
                 if (state.liveLine){
                     drawingLines[clientId] = state.liveLine;
                 }
             });
-            console.log("drawingLines:", drawingLines);
             setRemoteCursors(cursors);
             setLiveLines(drawingLines);
         });
@@ -69,13 +67,14 @@ export function useWhiteboardSync(boardId: string){
         
     }, [boardId]);
 
-    const pushLine = (line: LineData) => ylinesRef.current?.push([line]);
-    const clearLines = () => {
+    const pushLine = useCallback((line: LineData) => ylinesRef.current?.push([line]), []);
+    const clearLines = useCallback(() => {
         const ylines = ylinesRef.current;
         if (ylines) ylines.delete(0, ylines.length);
-    };
-    const updateCursor = (point: { x: number, y: number }) => providerRef.current?.awareness.setLocalStateField("cursor", point);
-    const updateLiveLine = (line: LineData | null) => {providerRef.current?.awareness.setLocalStateField("liveLine", line)};
-
-    return { lines, setLines, remoteCursors, liveLines, pushLine, clearLines, updateCursor, updateLiveLine };
+    }, []);
+    const updateCursor = useCallback((point: { x: number, y: number }) => providerRef.current?.awareness.setLocalStateField("cursor", point), []);
+    const updateLiveLine = useCallback((line: LineData | null) => {providerRef.current?.awareness.setLocalStateField("liveLine", line)}, []);
+    const updateDrawSettings = useCallback((settings: {color: string, strokeWidth: number, tool: "pen" | "eraser"}) => {providerRef.current?.awareness.setLocalStateField("drawSettings", settings)},[]);
+    
+    return { lines, setLines, remoteCursors, liveLines, pushLine, clearLines, updateCursor, updateLiveLine, updateDrawSettings };
 }

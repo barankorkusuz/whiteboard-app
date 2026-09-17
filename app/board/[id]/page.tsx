@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useEffect } from "react";
 import { useParams } from "next/navigation";
 import { saveBoard } from "@/lib/api"
 import { useWhiteboardSync } from "@/lib/useWhiteboardSync";
@@ -19,7 +19,7 @@ const App = () => {
 
   const stageRef = useRef<Konva.Stage>(null);
 
-  const { lines, setLines, remoteCursors, liveLines, pushLine, clearLines, updateCursor, updateLiveLine } = useWhiteboardSync(boardId);
+  const { lines, setLines, remoteCursors, liveLines, pushLine, clearLines, updateCursor, updateLiveLine, updateDrawSettings } = useWhiteboardSync(boardId);
 
   const handleSave = async () => {
     await saveBoard(boardId, lines);
@@ -70,6 +70,10 @@ const App = () => {
     link.click();
     document.body.removeChild(link);
   };
+
+  useEffect(() => {
+    updateDrawSettings({color, strokeWidth, tool});
+  }, [color, strokeWidth, tool , updateDrawSettings]);
 
 
   return (

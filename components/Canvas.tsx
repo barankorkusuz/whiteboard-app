@@ -64,8 +64,15 @@ const Canvas = forwardRef<Konva.Stage, CanvasProps>(function Canvas({
                     ))}
                     {Object.entries(remoteCursors).map(([clientId, cursor]) => (
                         <Fragment key={clientId}>
-                            <Circle x={cursor.x} y={cursor.y} radius={5} fill={cursor.color} />
-                            <Text x={cursor.x + 8} y={cursor.y -8} text={cursor.name} fill={cursor.color}/>
+                            <Circle 
+                                x={cursor.x}
+                                y={cursor.y}
+                                radius={cursor.strokeWidth/2}
+                                fill={cursor.tool === "eraser" ? "transparent" : cursor.color}
+                                stroke={cursor.color}
+                                strokeWidth={cursor.tool === "eraser" ? 2 : 0}
+                            />
+                            <Text x={cursor.x - 24} y={cursor.y + 8} text={cursor.name} fill={cursor.color}/>
                         </Fragment>
                     ))}
                     </Layer>
