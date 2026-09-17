@@ -19,7 +19,7 @@ const App = () => {
 
   const stageRef = useRef<Konva.Stage>(null);
 
-  const { lines, setLines, remoteCursors, pushLine, clearLines,  updateCursor } = useWhiteboardSync(boardId);
+  const { lines, setLines, remoteCursors, liveLines, pushLine, clearLines, updateCursor, updateLiveLine } = useWhiteboardSync(boardId);
 
   const handleSave = async () => {
     await saveBoard(boardId, lines);
@@ -29,7 +29,9 @@ const App = () => {
     isDrawing.current = true;
     const pos = e.target.getStage()?.getPointerPosition();
     if (!pos) return;
-    setLines([...lines, {tool, points: [pos.x, pos.y], color, strokeWidth}]);
+    const newLine = {tool, points: [pos.x, pos.y], color, strokeWidth}
+    setLines([...lines, newLine]);
+    updateLiveLine(newLine);
   };
 
   const handleMouseMove = (e: Konva.KonvaEventObject<MouseEvent>) => {
@@ -42,18 +44,19 @@ const App = () => {
     if (!isDrawing.current)return;
     
     const lastLine = lines[lines.length-1];
-    //add point
     const updatedLine = {
       ...lastLine,
       points: [...lastLine.points, point.x, point.y],
     };
     setLines([...lines.slice(0, -1), updatedLine]);
+    updateLiveLine(updatedLine);
   };
 
   const handleMouseUp = () => {
     isDrawing.current = false;
     const finishedLine = lines[lines.length - 1];
     pushLine(finishedLine);
+    updateLiveLine(null);
   };
 
   const handleExport = () => {
@@ -90,6 +93,7 @@ const App = () => {
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           ref={stageRef}
+          liveLines={liveLines}
           />
       </div>
     </div>

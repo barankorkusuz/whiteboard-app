@@ -13,6 +13,7 @@ type CanvasProps = {
     onMouseUp: () => void;
     width?: number;
     height?: number;
+    liveLines: { [clientId: number]: LineData };
 };
 
 const Canvas = forwardRef<Konva.Stage, CanvasProps>(function Canvas({
@@ -23,6 +24,7 @@ const Canvas = forwardRef<Konva.Stage, CanvasProps>(function Canvas({
     onMouseUp,
     width = 1000,
     height = 700,
+    liveLines,
 }, ref){
 
     return(
@@ -39,6 +41,18 @@ const Canvas = forwardRef<Konva.Stage, CanvasProps>(function Canvas({
                     {lines.map((line, i) => (
                         <Line
                             key={i}
+                            points={line.points}
+                            stroke={line.color}
+                            strokeWidth={line.strokeWidth}
+                            tension={0.5}
+                            lineCap="round"
+                            lineJoin="round"
+                            globalCompositeOperation={line.tool === "eraser" ? "destination-out": "source-over"}
+                        />
+                    ))}
+                    {Object.entries(liveLines).map(([clientId, line]) => (
+                        <Line
+                            key = {`live-${clientId}`}
                             points={line.points}
                             stroke={line.color}
                             strokeWidth={line.strokeWidth}

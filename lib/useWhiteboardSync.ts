@@ -9,6 +9,7 @@ const WEBSOCKET_URL = process.env.NEXT_PUBLIC_WEBSOCKET_URL || "ws://localhost:1
 export function useWhiteboardSync(boardId: string){
 
     const [lines, setLines] = useState<LineData[]>([]);
+    const [liveLines, setLiveLines] = useState<{ [clientId: number]: LineData }>({});
     const [remoteCursors, setRemoteCursors] = useState<{ [clientId: number]: CursorData }>({});
 
     const ylinesRef = useRef<Y.Array<LineData> | null>(null);
@@ -37,14 +38,20 @@ export function useWhiteboardSync(boardId: string){
         provider.awareness.on("change", () => {
             const states = provider. awareness.getStates();
             const cursors: typeof remoteCursors = {};
+            const drawingLines: typeof liveLines = {};
 
             states.forEach((state, clientId) => {
                 if (clientId === provider.awareness.clientID) return;
                 if (state.cursor && state.user){
                     cursors[clientId] = {x: state.cursor.x, y: state.cursor.y, name: state.user.name, color: state.user.color};
                 }
+                if (state.liveLine){
+                    drawingLines[clientId] = state.liveLine;
+                }
             });
+            console.log("drawingLines:", drawingLines);
             setRemoteCursors(cursors);
+            setLiveLines(drawingLines);
         });
 
         provider.on("sync", (isSynced: boolean) => {
@@ -68,6 +75,7 @@ export function useWhiteboardSync(boardId: string){
         if (ylines) ylines.delete(0, ylines.length);
     };
     const updateCursor = (point: { x: number, y: number }) => providerRef.current?.awareness.setLocalStateField("cursor", point);
+    const updateLiveLine = (line: LineData | null) => {providerRef.current?.awareness.setLocalStateField("liveLine", line)};
 
-    return { lines, setLines, remoteCursors, pushLine, clearLines, updateCursor };
+    return { lines, setLines, remoteCursors, liveLines, pushLine, clearLines, updateCursor, updateLiveLine };
 }
