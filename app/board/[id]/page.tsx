@@ -1,5 +1,5 @@
 "use client";
-import React, from "react";
+import React from "react";
 import { useParams } from "next/navigation";
 import { saveBoard } from "@/lib/api"
 import { useWhiteboardSync } from "@/lib/useWhiteboardSync";
@@ -56,16 +56,7 @@ const App = () => {
 
 
   return (
-    <div
-    style={
-      {
-        minHeight: "100vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-      }
-    }
-    >
+    <div className="flex flex-col h-screen bg-[#FAFAF9] text-[#1C1C1C]">
       <Toolbar
         color={color}
         onColorChange={setColor}
@@ -76,13 +67,15 @@ const App = () => {
         onClear={clearLines}
         onSave={handleSave}
       />
-    <Canvas
-      lines={lines}
-      remoteCursors={remoteCursors}
-      onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      />
+      <div className="flex-1 flex items-center justify-center">
+        <Canvas
+          lines={lines}
+          remoteCursors={remoteCursors}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          />
+      </div>
     </div>
   );
 }

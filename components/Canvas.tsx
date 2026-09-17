@@ -25,10 +25,8 @@ export default function Canvas({
 }: CanvasProps){
 
     return(
+        <div className="bg-white border border-gray-200 shadow-sm">
         <Stage
-        style={
-            {borderWidth:"6px"}
-        }
             width={width}
             height={height}
             onMouseDown={onMouseDown}
@@ -58,5 +56,6 @@ export default function Canvas({
                 }
                 </Layer>
         </Stage>
+        </div>
     );
 }
