@@ -9,6 +9,7 @@ type ToolbarProps = {
     onToolChange: (tool: 'pen' | 'eraser') => void;
     onClear: () => void;
     onSave: () => void;
+    onExport: () => void;
 };
 
 export default function Toolbar({
@@ -20,6 +21,7 @@ export default function Toolbar({
     onToolChange,
     onClear,
     onSave,
+    onExport,
 }: ToolbarProps){
     return (
         <div className="flex items-center gap-4 px-6 py-3 bg-white border-b border-gray-200">
@@ -50,6 +52,9 @@ export default function Toolbar({
             <button
                 className="px-3 py-1.5 rounded-md text-sm font-medium text-[#1C1C1C] hover:bg-gray-100"
                 onClick={onClear}> Clear </button>
+            <button
+                className="px-3 py-1.5 rounded-md text-sm font-medium text-[#1C1C1C] hover:bg-gray-100"
+                onClick={onExport}> Export </button>
             <button
                 className="ml-auto px-4 py-1.5 rounded-md text-sm font-medium bg-[#4C5FD5] text-white hover:opacity-90" 
                 onClick={onSave}> Save </button>

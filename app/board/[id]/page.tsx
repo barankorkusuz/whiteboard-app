@@ -5,6 +5,8 @@ import { saveBoard } from "@/lib/api"
 import { useWhiteboardSync } from "@/lib/useWhiteboardSync";
 import Toolbar from "@/components/Toolbar";
 import Canvas from "@/components/Canvas";
+import { useRef } from "react";
+import type Konva from "konva";
 
 const App = () => {
   const [tool, setTool] = React.useState<"pen" | "eraser">("pen");
@@ -15,43 +17,55 @@ const App = () => {
   const params = useParams();
   const boardId = params.id as string;
 
+  const stageRef = useRef<Konva.Stage>(null);
+
   const { lines, setLines, remoteCursors, pushLine, clearLines,  updateCursor } = useWhiteboardSync(boardId);
 
   const handleSave = async () => {
     await saveBoard(boardId, lines);
   }
 
-  const handleMouseDown = (e) => {
+  const handleMouseDown = (e:Konva.KonvaEventObject<MouseEvent>) => {
     isDrawing.current = true;
-    const pos = e.target.getStage().getPointerPosition();
+    const pos = e.target.getStage()?.getPointerPosition();
+    if (!pos) return;
     setLines([...lines, {tool, points: [pos.x, pos.y], color, strokeWidth}]);
   };
 
-  const handleMouseMove = (e) => {
+  const handleMouseMove = (e: Konva.KonvaEventObject<MouseEvent>) => {
     const stage = e.target.getStage();
-    const point = stage.getPointerPosition();
+    const point = stage?.getPointerPosition();
+    if (!point) return;
 
     updateCursor(point);
     // no drawing - skipping
-    if (!isDrawing.current){
-      return;
-    }
-
+    if (!isDrawing.current)return;
     
-    let lastLine = lines[lines.length-1];
-
+    const lastLine = lines[lines.length-1];
     //add point
-    lastLine.points = lastLine.points.concat([point.x, point.y]);
-
-    //replace last
-    lines.splice(lines.length - 1, 1, lastLine);
-    setLines(lines.concat());
+    const updatedLine = {
+      ...lastLine,
+      points: [...lastLine.points, point.x, point.y],
+    };
+    setLines([...lines.slice(0, -1), updatedLine]);
   };
 
   const handleMouseUp = () => {
     isDrawing.current = false;
     const finishedLine = lines[lines.length - 1];
     pushLine(finishedLine);
+  };
+
+  const handleExport = () => {
+    const uri = stageRef.current?.toDataURL({ pixelRatio: 2 });
+    if (!uri) return;
+
+    const link = document.createElement("a");
+    link.download = `board-${boardId}.png`;
+    link.href = uri;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
 
@@ -66,6 +80,7 @@ const App = () => {
         onToolChange={setTool}
         onClear={clearLines}
         onSave={handleSave}
+        onExport={handleExport}
       />
       <div className="flex-1 flex items-center justify-center">
         <Canvas
@@ -74,6 +89,7 @@ const App = () => {
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
+          ref={stageRef}
           />
       </div>
     </div>
