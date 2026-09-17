@@ -5,6 +5,7 @@ import { saveBoard } from "@/lib/api"
 import { useWhiteboardSync } from "@/lib/useWhiteboardSync";
 import Toolbar from "@/components/Toolbar";
 import Canvas from "@/components/Canvas";
+import type { CanvasHandle } from "@/components/Canvas";
 import { useRef } from "react";
 import type Konva from "konva";
 
@@ -17,7 +18,7 @@ const App = () => {
   const params = useParams();
   const boardId = params.id as string;
 
-  const stageRef = useRef<Konva.Stage>(null);
+  const canvasRef = useRef<CanvasHandle>(null);
 
   const { lines, setLines, remoteCursors, liveLines, pushLine, clearLines, updateCursor, updateLiveLine, updateDrawSettings } = useWhiteboardSync(boardId);
 
@@ -60,7 +61,7 @@ const App = () => {
   };
 
   const handleExport = () => {
-    const uri = stageRef.current?.toDataURL({ pixelRatio: 2 });
+    const uri = canvasRef.current?.exportPNG();
     if (!uri) return;
 
     const link = document.createElement("a");
@@ -96,7 +97,7 @@ const App = () => {
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
-          ref={stageRef}
+          ref={canvasRef}
           liveLines={liveLines}
           />
       </div>

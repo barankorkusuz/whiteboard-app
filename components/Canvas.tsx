@@ -1,6 +1,6 @@
 "use-client"
 
-import { forwardRef, Fragment } from "react";
+import { forwardRef, Fragment, useImperativeHandle, useRef } from "react";
 import { Stage, Layer, Line, Circle, Text } from "react-konva";
 import Konva from "konva";
 import { LineData, CursorData } from "@/lib/types";
@@ -16,7 +16,11 @@ type CanvasProps = {
     liveLines: { [clientId: number]: LineData };
 };
 
-const Canvas = forwardRef<Konva.Stage, CanvasProps>(function Canvas({
+export type CanvasHandle = {
+    exportPNG: (pixelRatio?: number) => string | undefined;
+};
+
+const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas({
     lines,
     remoteCursors,
     onMouseDown,
@@ -26,18 +30,22 @@ const Canvas = forwardRef<Konva.Stage, CanvasProps>(function Canvas({
     height = 700,
     liveLines,
 }, ref){
+    const contentLayerRef = useRef<Konva.Layer>(null);
+
+    useImperativeHandle(ref, () => ({
+        exportPNG: (pixelRatio = 2) => contentLayerRef.current?.toDataURL({ pixelRatio }),
+    }));
 
     return(
         <div className="bg-white border border-gray-200 shadow-sm">
             <Stage
-                ref={ref}
                 width={width}
                 height={height}
                 onMouseDown={onMouseDown}
                 onMouseMove={onMouseMove}
                 onMouseUp={onMouseUp}
             >
-                <Layer>
+                <Layer ref = {contentLayerRef}>
                     {lines.map((line, i) => (
                         <Line
                             key={i}
@@ -62,8 +70,10 @@ const Canvas = forwardRef<Konva.Stage, CanvasProps>(function Canvas({
                             globalCompositeOperation={line.tool === "eraser" ? "destination-out": "source-over"}
                         />
                     ))}
-                    {Object.entries(remoteCursors).map(([clientId, cursor]) => (
-                        <Fragment key={clientId}>
+                    </Layer>
+                    <Layer listening={false}>
+                        {Object.entries(remoteCursors).map(([clientId, cursor]) => (
+                            <Fragment key={clientId}>
                             <Circle 
                                 x={cursor.x}
                                 y={cursor.y}
@@ -74,7 +84,7 @@ const Canvas = forwardRef<Konva.Stage, CanvasProps>(function Canvas({
                             />
                             <Text x={cursor.x - 24} y={cursor.y + 8} text={cursor.name} fill={cursor.color}/>
                         </Fragment>
-                    ))}
+                        ))}
                     </Layer>
             </Stage>
         </div>
