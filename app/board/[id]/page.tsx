@@ -16,6 +16,7 @@ const App = () => {
   const [tool, setTool] = React.useState<"pen" | "eraser">("pen");
   const [color, setColor] = React.useState<string>("#000000");
   const [strokeWidth, setStrokeWidth] = React.useState<number>(5);
+  const [localCursor, setLocalCursor] = React.useState<{ x: number, y: number } | null>(null);
   const isDrawing = React.useRef(false);  
   
   const params = useParams();
@@ -62,6 +63,7 @@ const App = () => {
     if (!raw) return;
 
     const point = { x: raw.x/scale, y: raw.y/scale };
+    setLocalCursor(point);
     updateCursor(point);
     // no drawing - skipping
     if (!isDrawing.current)return;
@@ -80,6 +82,10 @@ const App = () => {
     const finishedLine = lines[lines.length - 1];
     pushLine(finishedLine);
     updateLiveLine(null);
+  };
+
+  const handlePointerLeave = () => {
+    setLocalCursor(null);
   };
 
   const handleExport = () => {
@@ -120,6 +126,8 @@ const App = () => {
           height={BASE_HEIGHT}
           scale={scale}
           lines={lines}
+          ownCursor={localCursor ? { ...localCursor, color, strokeWidth, tool }: null}
+          onMouseLeave={handlePointerLeave}
           remoteCursors={remoteCursors}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}

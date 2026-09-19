@@ -13,7 +13,7 @@ const Home = () => {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen bg-[#FAFAF9] text-[#1C1C1C] gap-6">
+    <div className="flex flex-col items-center justify-center h-screen bg-[#FAFAF9] text-[#1C1C1C] gap-6 touch-none select-none [-webkit-touch-callout:none]">
       <h1 className="text-2xl font-semibold">Whiteboard</h1>
       <button
         className="px-5 py-2.5 rounded-md text-sm font-medium bg-[#4C5FD5] text-white hover:opacity-90 transition-opacity" 

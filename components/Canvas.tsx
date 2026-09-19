@@ -7,6 +7,8 @@ import { LineData, CursorData } from "@/lib/types";
 
 type CanvasProps = {
     lines: LineData[];
+    ownCursor: { x: number; y:number; color: string; strokeWidth: number; tool: "pen" | "eraser"} | null;
+    onMouseLeave: () => void;
     remoteCursors: { [clientId: number]: CursorData };
     onMouseDown: (e: Konva.KonvaEventObject<PointerEvent>) => void;
     onMouseMove: (e: Konva.KonvaEventObject<PointerEvent>) => void;
@@ -23,6 +25,8 @@ export type CanvasHandle = {
 
 const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas({
     lines,
+    ownCursor,
+    onMouseLeave,
     remoteCursors,
     onMouseDown,
     onMouseMove,
@@ -48,7 +52,8 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas({
                 onPointerDown={onMouseDown}
                 onPointerMove={onMouseMove}
                 onPointerUp={onMouseUp}
-                style={{ touchAction: "none", userSelect: "none", WebkitTouchCallout: "none" }}
+                onPointerLeave={onMouseLeave}
+                style={{ touchAction: "none", userSelect: "none", WebkitTouchCallout: "none", cursor: "none" }}
             >
                 <Layer ref = {contentLayerRef}>
                     {lines.map((line, i) => (
@@ -75,6 +80,18 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas({
                             globalCompositeOperation={line.tool === "eraser" ? "destination-out": "source-over"}
                         />
                     ))}
+                    </Layer>
+                    <Layer listening={false}>
+                        {ownCursor && (
+                            <Circle 
+                                x={ownCursor.x}
+                                y={ownCursor.y}
+                                radius={ownCursor.strokeWidth/2}
+                                fill={ownCursor.tool === "eraser" ? "transparent" : ownCursor.color}
+                                stroke={ownCursor.color}
+                                strokeWidth={ownCursor.tool === "eraser" ? 2 : 0}
+                            />
+                        )}
                     </Layer>
                     <Layer listening={false}>
                         {Object.entries(remoteCursors).map(([clientId, cursor]) => (
