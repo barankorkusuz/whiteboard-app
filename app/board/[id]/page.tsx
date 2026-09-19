@@ -9,6 +9,9 @@ import type { CanvasHandle } from "@/components/Canvas";
 import { useRef } from "react";
 import type Konva from "konva";
 
+const BASE_WIDTH = 1000;
+const BASE_HEIGHT = 700;
+
 const App = () => {
   const [tool, setTool] = React.useState<"pen" | "eraser">("pen");
   const [color, setColor] = React.useState<string>("#000000");
@@ -22,24 +25,43 @@ const App = () => {
 
   const { lines, setLines, remoteCursors, liveLines, pushLine, clearLines, updateCursor, updateLiveLine, updateDrawSettings } = useWhiteboardSync(boardId);
 
+  const toolbarRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = React.useState(1);
+
+  useEffect(() => {
+    function updateScale(){
+      const toolbarHeight = toolbarRef.current?.offsetHeight ?? 80;
+      const availableWidth = window.innerWidth - 32;
+      const availableHeight = window.innerHeight - toolbarHeight - 16;
+      setScale(Math.min(1, availableWidth / BASE_WIDTH, availableHeight/BASE_HEIGHT));
+    }
+    updateScale();
+    window.addEventListener("resize", updateScale);
+    return () => window.removeEventListener("resize", updateScale);
+  }, []);
+
   const handleSave = async () => {
     await saveBoard(boardId, lines);
   }
 
-  const handleMouseDown = (e:Konva.KonvaEventObject<MouseEvent>) => {
+  const handleMouseDown = (e:Konva.KonvaEventObject<PointerEvent>) => {
+    e.evt.preventDefault();
     isDrawing.current = true;
-    const pos = e.target.getStage()?.getPointerPosition();
-    if (!pos) return;
+    const raw = e.target.getStage()?.getPointerPosition();
+    if (!raw) return;
+    const pos = { x: raw.x/scale, y: raw.y/scale};
     const newLine = {tool, points: [pos.x, pos.y], color, strokeWidth}
     setLines([...lines, newLine]);
     updateLiveLine(newLine);
   };
 
-  const handleMouseMove = (e: Konva.KonvaEventObject<MouseEvent>) => {
+  const handleMouseMove = (e: Konva.KonvaEventObject<PointerEvent>) => {
+    e.evt.preventDefault();
     const stage = e.target.getStage();
-    const point = stage?.getPointerPosition();
-    if (!point) return;
+    const raw = stage?.getPointerPosition();
+    if (!raw) return;
 
+    const point = { x: raw.x/scale, y: raw.y/scale };
     updateCursor(point);
     // no drawing - skipping
     if (!isDrawing.current)return;
@@ -78,7 +100,8 @@ const App = () => {
 
 
   return (
-    <div className="flex flex-col h-screen bg-[#FAFAF9] text-[#1C1C1C]">
+    <div className="flex flex-col h-screen bg-[#FAFAF9] text-[#1C1C1C] overflow-y-auto touch-none select-none [-webkit-touch-callout:none]">
+      <div ref={toolbarRef} >
       <Toolbar
         color={color}
         onColorChange={setColor}
@@ -90,8 +113,12 @@ const App = () => {
         onSave={handleSave}
         onExport={handleExport}
       />
+      </div>
       <div className="flex-1 flex items-center justify-center">
         <Canvas
+          width={BASE_WIDTH}
+          height={BASE_HEIGHT}
+          scale={scale}
           lines={lines}
           remoteCursors={remoteCursors}
           onMouseDown={handleMouseDown}

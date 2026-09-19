@@ -8,11 +8,12 @@ import { LineData, CursorData } from "@/lib/types";
 type CanvasProps = {
     lines: LineData[];
     remoteCursors: { [clientId: number]: CursorData };
-    onMouseDown: (e: Konva.KonvaEventObject<MouseEvent>) => void;
-    onMouseMove: (e: Konva.KonvaEventObject<MouseEvent>) => void;
+    onMouseDown: (e: Konva.KonvaEventObject<PointerEvent>) => void;
+    onMouseMove: (e: Konva.KonvaEventObject<PointerEvent>) => void;
     onMouseUp: () => void;
     width?: number;
     height?: number;
+    scale?: number;
     liveLines: { [clientId: number]: LineData };
 };
 
@@ -28,22 +29,26 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas({
     onMouseUp,
     width = 1000,
     height = 700,
+    scale = 1,
     liveLines,
 }, ref){
     const contentLayerRef = useRef<Konva.Layer>(null);
 
     useImperativeHandle(ref, () => ({
-        exportPNG: (pixelRatio = 2) => contentLayerRef.current?.toDataURL({ pixelRatio }),
+        exportPNG: (pixelRatio = 2) => contentLayerRef.current?.toDataURL({ pixelRatio: pixelRatio / scale }),
     }));
 
     return(
-        <div className="bg-white border border-gray-200 shadow-sm">
+        <div className="bg-white border border-gray-200 shadow-sm touch-none select-none [-webkit-touch-callout:none]" style={{ width: width * scale, height: height * scale}}>
             <Stage
-                width={width}
-                height={height}
-                onMouseDown={onMouseDown}
-                onMouseMove={onMouseMove}
-                onMouseUp={onMouseUp}
+                width={width * scale}
+                height={height * scale}
+                scaleX={scale}
+                scaleY={scale}
+                onPointerDown={onMouseDown}
+                onPointerMove={onMouseMove}
+                onPointerUp={onMouseUp}
+                style={{ touchAction: "none", userSelect: "none", WebkitTouchCallout: "none" }}
             >
                 <Layer ref = {contentLayerRef}>
                     {lines.map((line, i) => (
